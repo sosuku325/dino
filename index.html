@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0; overflow:hidden; background:#eee;">
+    <canvas id="game" width="600" height="200"></canvas>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        let y = 150, dy = 0;
+        document.addEventListener('keydown', () => { if(y === 150) dy = -8; });
+        function draw() {
+            ctx.clearRect(0,0,600,200);
+            dy += 0.4; y += dy; if(y > 150) { y = 150; dy = 0; }
+            ctx.fillStyle = 'green'; ctx.fillRect(50, y, 30, 30); // 恐竜（四角）
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+</body>
+</html>
