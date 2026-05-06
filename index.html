@@ -1,19 +1,111 @@
 <!DOCTYPE html>
 <html>
-<body style="margin:0; overflow:hidden; background:#eee;">
-    <canvas id="game" width="600" height="200"></canvas>
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        let y = 150, dy = 0;
-        document.addEventListener('keydown', () => { if(y === 150) dy = -8; });
-        function draw() {
-            ctx.clearRect(0,0,600,200);
-            dy += 0.4; y += dy; if(y > 150) { y = 150; dy = 0; }
-            ctx.fillStyle = 'green'; ctx.fillRect(50, y, 30, 30); // 恐竜（四角）
-            requestAnimationFrame(draw);
+<body style="margin:0; overflow:hidden; background:#f7f7f7;">
+<canvas id="game" width="800" height="250"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+let dino = { x: 50, y: 170, w: 30, h: 30, dy: 0, jumping: false };
+let gravity = 0.5;
+let obstacles = [];
+let frame = 0;
+let score = 0;
+let gameOver = false;
+
+function spawnObstacle() {
+    obstacles.push({ x: canvas.width, y: 180, w: 20, h: 40 });
+}
+
+document.addEventListener('keydown', () => {
+    if (!dino.jumping) {
+        dino.dy = -10;
+        dino.jumping = true;
+    }
+    if (gameOver) reset();
+});
+
+function update() {
+    if (gameOver) return;
+
+    frame++;
+    if (frame % 90 === 0) spawnObstacle();
+
+    
+    dino.dy += gravity;
+    dino.y += dino.dy;
+
+    if (dino.y >= 170) {
+        dino.y = 170;
+        dino.dy = 0;
+        dino.jumping = false;
+    }
+
+    
+    obstacles.forEach(o => o.x -= 5);
+    obstacles = obstacles.filter(o => o.x + o.w > 0);
+
+    
+    obstacles.forEach(o => {
+        if (
+            dino.x < o.x + o.w &&
+            dino.x + dino.w > o.x &&
+            dino.y < o.y + o.h &&
+            dino.y + dino.h > o.y
+        ) {
+            gameOver = true;
         }
-        draw();
-    </script>
+    });
+
+    score++;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    
+    ctx.fillStyle = '#ccc';
+    ctx.fillRect(0, 200, canvas.width, 5);
+
+  
+    ctx.fillStyle = '#2ecc71';
+    ctx.fillRect(dino.x, dino.y, dino.w, dino.h);
+
+   
+    ctx.fillStyle = '#e74c3c';
+    obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+
+   
+    ctx.fillStyle = '#333';
+    ctx.font = '16px monospace';
+    ctx.fillText('Score: ' + score, 650, 30);
+
+    if (gameOver) {
+        ctx.fillStyle = '#000';
+        ctx.font = '30px monospace';
+        ctx.fillText('GAME OVER', 300, 120);
+        ctx.font = '16px monospace';
+        ctx.fillText('Press any key to restart', 280, 150);
+    }
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+
+function reset() {
+    dino.y = 170;
+    dino.dy = 0;
+    dino.jumping = false;
+    obstacles = [];
+    score = 0;
+    frame = 0;
+    gameOver = false;
+}
+
+loop();
+</script>
 </body>
 </html>
