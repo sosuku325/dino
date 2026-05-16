@@ -17,28 +17,46 @@ let obstacles = [];
 let frame = 0;
 let score = 0;
 let gameOver = false;
+let gameSpeed = 5;
+const keys = {};
 
 function spawnObstacle() {
     obstacles.push({ x: canvas.width, y: 180, w: 20, h: 40 });
 }
 
-document.addEventListener('keydown', () => {
-    if (!dino.jumping) {
-        dino.dy = -10;
-        dino.jumping = true;
+document.addEventListener('keydown', (e) => {
+    if (keys[e.code]) return;
+    keys[e.code] = true
+    if (gameOver) {
+        reset();
+        return;
     }
-    if (gameOver) reset();
+    if(e.code == "Space") {
+        if (!dino.jumping) {
+            dino.dy = -10;
+            dino.jumping = true;
+        }
+    }
+
 });
 
-function update() {
+document.addEventListener("keyup", (e) => {
+    keys[e.code] = false;
+});
+
+let nextSpawnFrame = 90
+function update(delta) {
     if (gameOver) return;
 
     frame++;
-    if (frame % 90 === 0) spawnObstacle();
+    if (frame >= nextSpawnFrame) {
+        spawnObstacle();
+        nextSpawnFrame = frame + Math.floor(Math.random() * 1000) + 120;
+    }
 
     
-    dino.dy += gravity;
-    dino.y += dino.dy;
+    dino.dy += gravity * delta;
+    dino.y += dino.dy * delta;
 
     if (dino.y >= 170) {
         dino.y = 170;
@@ -47,7 +65,7 @@ function update() {
     }
 
     
-    obstacles.forEach(o => o.x -= 5);
+    obstacles.forEach(o => o.x -= gameSpeed * delta);
     obstacles = obstacles.filter(o => o.x + o.w > 0);
 
     
@@ -63,6 +81,7 @@ function update() {
     });
 
     score++;
+    gameSpeed += 0.001;
 }
 
 function draw() {
@@ -97,7 +116,11 @@ function draw() {
 let lastTime = 0;
 
 function loop(timestamp) {
-
+    if (!lastTime) {
+        lastTime = timestamp;
+        requestAnimationFrame(loop)
+        return;
+    }
     const delta = (timestamp - lastTime) / 16.67;
     lastTime = timestamp;
     update(delta);
@@ -113,6 +136,7 @@ function reset() {
     score = 0;
     frame = 0;
     gameOver = false;
+    gameSpeed = 5;
 }
 
 loop();
