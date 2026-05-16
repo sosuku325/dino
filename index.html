@@ -94,8 +94,13 @@ function draw() {
     }
 }
 
-function loop() {
-    update();
+let lastTime = 0;
+
+function loop(timestamp) {
+
+    const delta = (timestamp - lastTime) / 16.67;
+    lastTime = timestamp;
+    update(delta);
     draw();
     requestAnimationFrame(loop);
 }
